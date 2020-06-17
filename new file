@@ -1,0 +1,42 @@
+https://stackoverflow.com/questions/27949569/convert-a-qimage-to-grayscale
+
+QImage image = ...;
+image.convertToFormat(QImage::Format_Grayscale8);
+
+
+
+
+
+I'll post a slightly modified version of @UmNyobe's code. I just increment a pointer for the scan lines instead of calculating each pixel via an index.
+
+// We assume the format to be RGB32!!!
+Q_ASSERT(image.format() == QImage::Format_RGB32);
+for (int ii = 0; ii < image.height(); ii++) {
+    QRgb *pixel = reinterpret_cast<QRgb*>(image.scanLine(ii));
+    QRgb *end = pixel + image.width();
+    for (; pixel != end; pixel++) {
+        int gray = qGray(*pixel);
+        *pixel = QColor(gray, gray, gray).rgb();
+    }
+}
+
+
+
+QImage convertToGrayScale(const QImage &srcImage) {
+     // Convert to 32bit pixel format
+     QImage dstImage = srcImage.convertToFormat(srcImage.hasAlphaChannel() ?
+              QImage::Format_ARGB32 : QImage::Format_RGB32);
+
+     unsigned int *data = (unsigned int*)dstImage.bits();
+     int pixelCount = dstImage.width() * dstImage.height();
+
+     // Convert each pixel to grayscale
+     for(int i = 0; i < pixelCount; ++i) {
+        int val = qGray(*data);
+        *data = qRgba(val, val, val, qAlpha(*data));
+        ++data;
+     }
+
+     return dstImage;
+  }
+
